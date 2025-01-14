@@ -1,5 +1,6 @@
 import numpy as np
 import helpers
+import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 #  #  #  Tasks  #  #  #
@@ -209,7 +210,7 @@ class Network:
         return np.max(np.abs(step_sizes))
 
     # Function that implements the gradient descent algorithm
-    def gradient_descent(self, train):
+    def gradient_descent(self, train, show=True):
         max_step, epochs = 1, 1
         error = None
         # Set the shape of the neuron arrays based on the number of observations in the batch
@@ -218,29 +219,30 @@ class Network:
                 neuron.reshape(self.batch_size)
         # While loop to keep the algorithm going
         while max_step > self.tolerance and epochs < self.MAXEpoch:
-            print(f"Epochs: {epochs}, error: {error}")
+            if show is True: print(f"Epochs: {epochs}, error: {error}")
             b = 1
             for batch in helpers.create_shuffled_batches(train, self.batch_size):
                 # Process each individual observation within the batch
-                print(f"Batch: {b}, error: {error}")
+                if show is True: print(f"Batch: {b}, error: {error}")
                 forward = self.forward_propagate(batch[:, self.x], y=batch[:, self.y], show=False)
                 error = forward["Error"]
                 backward = self.backward_propagate(batch[:, self.x], y=batch[:, self.y], preds=forward["Predictions"])
                 max_step = backward # Evaluation goes wrong
 
                 # Print the batch info with the current max_step
-                print(f"Batch: {b}, error: {error}, max_step: {max_step}")
+                if show is True: print(f"Batch: {b}, error: {error}, max_step: {max_step}")
 
                 # Check if the stopping criterion is met within the batch loop
+
                 if max_step <= self.tolerance:
-                    print("Stopping early as max_step is below the tolerance threshold.")
+                    if show is True: print("Stopping early as max_step is below the tolerance threshold.")
                     return
                 b += 1
             epochs += 1
 
 
     # Train the network and predict values for a test dataset
-    def predict(self, x: tuple, y, train, test, batch_size=None):
+    def predict(self, x: tuple, y, train, test, batch_size=None, show=False):
         """
         Train the network and predict values for a test set.
 
@@ -271,26 +273,31 @@ class Network:
             self.batch_size = len(train)
         else:
             self.batch_size = batch_size
-        self.gradient_descent(train)
+        self.gradient_descent(train, show=show)
         keys = ["Predictions", "Y_values", "Confusion", "Accuracy"]
         # Set the shape of the neuron arrays based on the number of observations in the test dataset
         for layer in self.layers:
             for neuron in layer.neurons:
                 neuron.reshape(len(test))
         testing = self.forward_propagate(test[:, x], test[:, y])
-        print(f"Predictions: {testing['Predictions']}; actual values: {test[:, y]}")
+        if show is True: print(f"Predictions: {testing['Predictions']}; actual values: {test[:, y]}")
         y_pred = testing["Predictions"] if self.categorical is False else np.argmax(testing["Predictions"], axis=1)
         y_true = test[:, y]
         # Create confusion matrix
         cm = confusion_matrix(y_true, y_pred)
+        unique_classes = np.unique(np.concatenate([y_true, y_pred]))
+        names = ("Setosa", "Versicolor", "Virginica")
+        cm = pd.DataFrame(cm, index=[f"True {i}" for i in names],
+                     columns = [f"Predicted {i}" for i in names])
         accuracy = (1 - np.mean(y_true - y_pred) ) if self.categorical is False else (1 - np.mean(y_true != y_pred) )
         # Print the confusion matrix and accuracy
-        print("Confusion Matrix:")
-        print(cm)
-        print("Accuracy")
-        print(accuracy)
         results = {key: value for key, value in zip(keys, [y_pred, y_true, cm, accuracy])}
-        return results
+        if show is True:
+            for key, value in results.items():
+                if key == "Confusion" or key == "Accuracy":
+                    print(f"{key}: {value}\n")
+        else:
+            return results
 
 
 class Layer:

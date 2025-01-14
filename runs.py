@@ -2,31 +2,48 @@ from network import Network
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 import numpy as np
-import time
 
+np.random.seed(22)
 
 ################################################################################
 ###############################   Iris dataset   ###############################
 ################################################################################
-iris = datasets.load_iris()
-iris = np.column_stack((iris.data, iris.target)) # Combine predictors and outcome into a single dataset
 
+
+iris = datasets.load_iris()  # Load the Iris dataset
+iris = np.column_stack((iris.data, iris.target))  # Combine features and categories into a single dataset
+
+# Split the Iris dataset into training and test set
 iris_train, iris_test = train_test_split(iris, test_size=0.33, random_state=42)
+# Create a neural network with 3 layers (Input, output layer and a hidden layer with 4 neurons)
+iris_network = Network(structure=(4, 4, 3), categorical=True, function="ReLu", rate=.01, tolerance=.001)
 
-# Timing iris dataset
-start_time = time.time()
-# Network with 3 layers (1 hidden layer which consists of 4 neurons)
-iris_network = Network(structure=(4,5,3), categorical=True, function="ReLu", rate=.01, tolerance=.001)
-MAX = 1 # Change number to see average accuracy, takes 13 seconds on average to run the network
-res = np.zeros([MAX])
-for i in range(0, MAX):
-    iris_network = Network(structure=(4, 5, 3), categorical=True, function="ReLu", rate=.01, tolerance=.001)
-    res[i] = iris_network.predict((0,1,2,3),4,iris_train, iris_test)["Accuracy"]
-print(res)
-acc = np.mean(res)
-print(acc)
-iris_time = time.time() - start_time
-print(f"Network run time: {iris_time:.6f} seconds")
+# Call the predict function on our network to start training and testing
+result = iris_network.predict((0, 1, 2, 3), 4, iris_train, iris_test, show=False)
+
+# Print the results in the console
+print("Confusion matrix")
+print(result["Confusion"])
+print("Accuracy")
+print(result["Accuracy"])
+
+
+
+
+
+
+
+
+# MAX = 10 # Change number to see average accuracy, takes 13 seconds on average to run the network
+# res = np.zeros([MAX])
+# for i in range(0, MAX):
+#     iris_network = Network(structure=(4, 5, 3), categorical=True, function="ReLu", rate=.01, tolerance=.001)
+#     res[i] = iris_network.predict((0,1,2,3),4,iris_train, iris_test)["Accuracy"]
+# print(res)
+# acc = np.mean(res)
+# print(acc)
+# iris_time = time.time() - start_time
+# print(f"Network run time: {iris_time:.6f} seconds")
 
 
 ################################################################################

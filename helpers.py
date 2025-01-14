@@ -1,5 +1,5 @@
 import numpy as np
-import time
+
 
 # Relu function
 def ReLu(vector):
