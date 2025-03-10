@@ -20,13 +20,14 @@ iris_network = Network(structure=(4, 4, 3), categorical=True, function="ReLu", r
 
 # Call the predict function on our network to start training and testing
 result = iris_network.predict((0, 1, 2, 3), 4, iris_train, iris_test, show=False)
-
+structure = iris_network.get_structure()
 # Print the results in the console
 print("Confusion matrix")
 print(result["Confusion"])
 print("Accuracy")
 print(result["Accuracy"])
-
+for key, value in structure.items():
+    print(f"{key}, {value}")
 
 
 

@@ -1,0 +1,448 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier-Bold;\f1\fmodern\fcharset0 Courier;\f2\fmodern\fcharset0 Courier-Oblique;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue109;\red109\green109\blue109;\red15\green112\blue3;
+\red82\green0\blue135;\red0\green0\blue254;}
+{\*\expandedcolortbl;;\csgenericrgb\c0\c0\c42745;\csgenericrgb\c42745\c42745\c42745;\csgenericrgb\c5882\c43922\c1176;
+\csgenericrgb\c32157\c0\c52941;\csgenericrgb\c0\c0\c99608;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww23560\viewh17340\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\b\fs40 \cf2 import 
+\f1\b0 \cf0 streamlit 
+\f0\b \cf2 as 
+\f1\b0 \cf0 st\
+
+\f0\b \cf2 from 
+\f1\b0 \cf0 network 
+\f0\b \cf2 import 
+\f1\b0 \cf0 Network\
+
+\f0\b \cf2 import 
+\f1\b0 \cf0 numpy 
+\f0\b \cf2 as 
+\f1\b0 \cf0 np\
+
+\f0\b \cf2 import 
+\f1\b0 \cf0 time\
+
+\f0\b \cf2 import 
+\f1\b0 \cf0 pandas 
+\f0\b \cf2 as 
+\f1\b0 \cf0 pd\
+
+\f0\b \cf2 from 
+\f1\b0 \cf0 sklearn 
+\f0\b \cf2 import 
+\f1\b0 \cf0 datasets\
+
+\f0\b \cf2 from 
+\f1\b0 \cf0 sklearn.model_selection 
+\f0\b \cf2 import 
+\f1\b0 \cf0 train_test_split\
+\
+
+\f2\i \cf3 # To Do:\
+# Incorporate exercises/examples: seed of the paper e.g.\
+# Add exercises to the Streamlit. Exercise: run it with 5 seeds, look at the miscategorizations, which flower most often? Examples of some seeds that give completely different results\
+# Picture + Bio for submission / ORCID\
+\
+# CSS for button styling\
+
+\f1\i0 \cf0 st.markdown(
+\f0\b \cf4 """\
+    <style>\
+        button \{\
+            border-radius: 8px;\
+            padding: 20px 20px;\
+            font-size: 16px;\
+            border: none;\
+            transition: 0.3s;\
+        \}\
+        \
+        button:hover\{ border: none; \}\
+        button:active \{ opacity: .6; color: white; \}\
+        button[kind="primary"] \{ background-color: #ff4b4b; color: white; \}\
+        button[kind="primary"]:hover \{ background-color: #d43f3f; \}\
+        button[kind="secondary"] \{ background-color: #4CAF50; color: white; \}\
+        button[kind="secondary"]:hover \{ background-color: #45a049; color: white; \}\
+    </style>\
+"""
+\f1\b0 \cf0 , \cf5 unsafe_allow_html\cf0 =
+\f0\b \cf2 True
+\f1\b0 \cf0 )\
+\
+
+\f2\i \cf3 # Initialize session state variables\
+\
+
+\f1\i0 \cf0 st.session_state.seed = 
+\f0\b \cf4 ""\
+\cf2 if \cf4 "test_n" \cf2 not in 
+\f1\b0 \cf0 st.session_state:\
+    st.session_state.test_n = (\cf6 1\cf0 /\cf6 3\cf0 )\
+
+\f0\b \cf2 if \cf4 "network_result" \cf2 not in 
+\f1\b0 \cf0 st.session_state:\
+    st.session_state.network_result = 
+\f0\b \cf2 None\
+if \cf4 "parameters" \cf2 not in 
+\f1\b0 \cf0 st.session_state:\
+    st.session_state.parameters = 
+\f0\b \cf2 None\
+if \cf4 "network_done" \cf2 not in 
+\f1\b0 \cf0 st.session_state:\
+    st.session_state.network_done = 
+\f0\b \cf2 False\
+if \cf4 "loading" \cf2 not in 
+\f1\b0 \cf0 st.session_state:\
+    st.session_state.loading = 
+\f0\b \cf2 False  
+\f2\i\b0 \cf3 # Track loading state\
+\
+# Title\
+
+\f1\i0 \cf0 st.title(
+\f0\b \cf4 "Simple Neural Network to Analyze the Iris Dataset"
+\f1\b0 \cf0 )\
+st.write(
+\f0\b \cf4 "Here you can use a simple neural network to analyze the Iris dataset. The network starts with different"\
+         "random weights each time you click the 'Run network' button (remember the biases are always 0 at the start). "\
+         "By entering a seed you can force the network to start with certain weights. "\
+         "So, if you provide the same seed and test set size, the results will be the same."
+\f1\b0 \cf0 )\
+st.write(
+\f0\b \cf4 "### Exercises/examples"
+\f1\b0 \cf0 )\
+st.write(
+\f0\b \cf4 "1. Try to replicate the results of the paper. The seed used in the paper is 22 and"\
+         "the test set size is 50 (.33)."
+\f1\b0 \cf0 )\
+st.write(
+\f0\b \cf4 "2. Use the seed 111 and test set size .33. What are the results and "\
+         "what do you notice about the weights and biases?"
+\f1\b0 \cf0 )\
+\
+
+\f2\i \cf3 # Seed Input\
+
+\f1\i0 \cf0 st.write(
+\f0\b \cf4 "**Change the seed**"
+\f1\b0 \cf0 )\
+seed_input = st.text_input(\
+    
+\f0\b \cf4 "Enter a number without decimals:"
+\f1\b0 \cf0 ,\
+    \cf5 placeholder\cf0 =
+\f0\b \cf4 "Enter a seed"
+\f1\b0 \cf0 ,\
+    \cf5 value\cf0 =st.session_state.seed,\
+    \cf5 key\cf0 =st.session_state.get(
+\f0\b \cf4 "widget_key"
+\f1\b0 \cf0 , 
+\f0\b \cf4 "seed_input"
+\f1\b0 \cf0 )\
+)\
+\
+
+\f2\i \cf3 # Train / Test set input\
+
+\f1\i0 \cf0 st.write(
+\f0\b \cf4 "**Adjust the slider below to choose the size of the test set**"
+\f1\b0 \cf0 )\
+test_n = st.slider(
+\f0\b \cf4 "Select a number:"
+\f1\b0 \cf0 , \cf5 min_value\cf0 =\cf6 0.1\cf0 , \cf5 max_value\cf0 =\cf6 0.9\cf0 , \cf5 step\cf0 =\cf6 0.01\cf0 , \cf5 key\cf0 =
+\f0\b \cf4 "test_n"
+\f1\b0 \cf0 )\
+\
+
+\f2\i \cf3 # Reset button\
+
+\f0\i0\b \cf2 if 
+\f1\b0 \cf0 st.button(
+\f0\b \cf4 "Reset"
+\f1\b0 \cf0 , \cf5 type\cf0 =
+\f0\b \cf4 "primary"
+\f1\b0 \cf0 ):\
+    st.session_state.clear()\
+    st.session_state[
+\f0\b \cf4 "widget_key"
+\f1\b0 \cf0 ] = \cf2 str\cf0 (np.random.rand())\
+    st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 None\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "network_done"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 False\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "loading"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 False\
+    
+\f1\b0 \cf0 st.rerun()\
+\
+
+\f2\i \cf3 # Load Iris dataset\
+
+\f1\i0 \cf0 iris = datasets.load_iris()\
+iris = np.column_stack((iris.data, iris.target))\
+\
+
+\f2\i \cf3 # Function to run the neural network (no threading, blocking function)\
+
+\f0\i0\b \cf2 def 
+\f1\b0 \cf0 run_network(seed, test_size):\
+    
+\f0\b \cf2 try
+\f1\b0 \cf0 :\
+        np.random.seed(seed)\
+        iris_train, iris_test = train_test_split(iris, \cf5 test_size\cf0 =test_size, \cf5 random_state\cf0 =\cf6 42\cf0 )\
+\
+        
+\f2\i \cf3 # Create a neural network with 3 layers (Input, hidden layer, and output layer)\
+        
+\f1\i0 \cf0 iris_network = Network(\cf5 structure\cf0 =(\cf6 4\cf0 , \cf6 4\cf0 , \cf6 3\cf0 ), \cf5 categorical\cf0 =
+\f0\b \cf2 True
+\f1\b0 \cf0 , \cf5 function\cf0 =
+\f0\b \cf4 "ReLu"
+\f1\b0 \cf0 , \cf5 rate\cf0 =\cf6 0.01\cf0 , \cf5 tolerance\cf0 =\cf6 0.001\cf0 )\
+\
+        
+\f2\i \cf3 # Predict and evaluate\
+        
+\f1\i0 \cf0 result = iris_network.predict((\cf6 0\cf0 , \cf6 1\cf0 , \cf6 2\cf0 , \cf6 3\cf0 ), \cf6 4\cf0 , iris_train, iris_test, \cf5 show\cf0 =
+\f0\b \cf2 False
+\f1\b0 \cf0 )\
+        parameters = iris_network.get_structure()\
+\
+        
+\f2\i \cf3 # Store results in session state\
+        
+\f1\i0 \cf0 st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ] = result\
+        st.session_state[
+\f0\b \cf4 "parameters"
+\f1\b0 \cf0 ] = parameters\
+    
+\f0\b \cf2 except 
+\f1\b0 Exception 
+\f0\b as 
+\f1\b0 \cf0 e:\
+        st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ] = 
+\f0\b \cf4 f"ERROR: \cf2 \{
+\f1\b0 \cf0 e
+\f0\b \cf2 \}\cf4 "\
+        
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "parameters"
+\f1\b0 \cf0 ] = 
+\f0\b \cf4 f"ERROR: \cf2 \{
+\f1\b0 \cf0 e
+\f0\b \cf2 \}\cf4 "\
+\
+    
+\f2\i\b0 \cf3 # Mark network as done and stop loading animation\
+    
+\f1\i0 \cf0 st.session_state[
+\f0\b \cf4 "network_done"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 True\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "loading"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 False\
+\
+
+\f2\i\b0 \cf3 # Run Neural Network button\
+
+\f0\i0\b \cf2 if 
+\f1\b0 \cf0 st.button(
+\f0\b \cf4 "Run Neural Network"
+\f1\b0 \cf0 ) 
+\f0\b \cf2 and not 
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "loading"
+\f1\b0 \cf0 ]:\
+    st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 None\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "parameters"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 None\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "network_done"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 False\
+    
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "loading"
+\f1\b0 \cf0 ] = 
+\f0\b \cf2 True\
+\
+    
+\f2\i\b0 \cf3 # Read session state values before starting the task\
+    
+\f0\i0\b \cf2 try
+\f1\b0 \cf0 :\
+        seed = \cf2 int\cf0 (seed_input.strip()) 
+\f0\b \cf2 if 
+\f1\b0 \cf0 seed_input.strip() 
+\f0\b \cf2 else 
+\f1\b0 \cf0 np.random.randint(\cf6 1\cf0 , \cf6 10000\cf0 )\
+        st.session_state.seed = seed\
+    
+\f0\b \cf2 except 
+\f1\b0 ValueError\cf0 :\
+        st.error(
+\f0\b \cf4 "Seed must be a number without decimals"
+\f1\b0 \cf0 )\
+        st.stop()\
+\
+    test_size = st.session_state.test_n  
+\f2\i \cf3 # Store test size before task starts\
+\
+    # Show loading animation\
+    
+\f1\i0 \cf0 loading_placeholder = st.empty()\
+    
+\f0\b \cf2 for 
+\f1\b0 \cf0 _ 
+\f0\b \cf2 in 
+\f1\b0 range\cf0 (\cf6 30\cf0 ):  
+\f2\i \cf3 # Animation loop for ~6 seconds\
+        
+\f0\i0\b \cf2 for 
+\f1\b0 \cf0 dots 
+\f0\b \cf2 in 
+\f1\b0 \cf0 [
+\f0\b \cf4 "\'95"
+\f1\b0 \cf0 , 
+\f0\b \cf4 "\'95\'95"
+\f1\b0 \cf0 , 
+\f0\b \cf4 "\'95\'95\'95"
+\f1\b0 \cf0 ]:\
+            loading_placeholder.write(
+\f0\b \cf4 f"Running network \cf2 \{
+\f1\b0 \cf0 dots
+\f0\b \cf2 \}\cf4 "
+\f1\b0 \cf0 )\
+            time.sleep(\cf6 0.3\cf0 )\
+        loading_placeholder.empty()\
+        
+\f0\b \cf2 if not 
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "loading"
+\f1\b0 \cf0 ]:  
+\f2\i \cf3 # Stop animation if the network finishes early\
+            
+\f0\i0\b \cf2 break\
+\
+    
+\f2\i\b0 \cf3 # Run the network without threading (synchronously)\
+    
+\f1\i0 \cf0 run_network(seed, test_size)\
+\
+
+\f2\i \cf3 # Display results if network is done\
+
+\f0\i0\b \cf2 if 
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "network_done"
+\f1\b0 \cf0 ] 
+\f0\b \cf2 and 
+\f1\b0 \cf0 st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ]:\
+    result = st.session_state[
+\f0\b \cf4 "network_result"
+\f1\b0 \cf0 ]\
+    parameters = st.session_state[
+\f0\b \cf4 "parameters"
+\f1\b0 \cf0 ]\
+    
+\f0\b \cf2 if 
+\f1\b0 isinstance\cf0 (result, \cf2 str\cf0 ) 
+\f0\b \cf2 and 
+\f1\b0 \cf0 result.startswith(
+\f0\b \cf4 "ERROR"
+\f1\b0 \cf0 ):\
+        st.error(result)\
+    
+\f0\b \cf2 else
+\f1\b0 \cf0 :\
+        st.write(
+\f0\b \cf4 f"Random seed: \cf2 \{
+\f1\b0 \cf0 st.session_state.seed
+\f0\b \cf2 \}\cf4 "
+\f1\b0 \cf0 )\
+        st.write(
+\f0\b \cf4 f"Test set size: \cf2 \{
+\f1\b0 int\cf0 (st.session_state.test_n * \cf6 150\cf0 )
+\f0\b \cf2 \}\cf4 "
+\f1\b0 \cf0 )\
+        st.write(
+\f0\b \cf4 "### Results of Neural Network on Iris Dataset"
+\f1\b0 \cf0 )\
+        st.write(
+\f0\b \cf4 "#### Confusion Matrix"
+\f1\b0 \cf0 )\
+        st.dataframe(result[
+\f0\b \cf4 "Confusion"
+\f1\b0 \cf0 ])\
+        st.write(
+\f0\b \cf4 "#### Accuracy"
+\f1\b0 \cf0 )\
+        st.write(
+\f0\b \cf4 f"\cf2 \{
+\f1\b0 \cf0 result[
+\f0\b \cf4 'Accuracy'
+\f1\b0 \cf0 ]
+\f0\b \cf2 :\cf4 .2f\cf2 \}\cf4 "
+\f1\b0 \cf0 )\
+\
+\
+        
+\f0\b \cf2 if 
+\f1\b0 \cf0 result[
+\f0\b \cf4 "Accuracy"
+\f1\b0 \cf0 ] < \cf6 0.7\cf0 :\
+            st.write(
+\f0\b \cf4 "The accuracy may be low due to suboptimal weights. "\
+                     "Try a different seed for better results."
+\f1\b0 \cf0 )\
+\
+        
+\f2\i \cf3 # Fix output\
+        
+\f1\i0 \cf0 st.write(
+\f0\b \cf4 "### Weights and Biases:"
+\f1\b0 \cf0 )\
+        
+\f0\b \cf2 for 
+\f1\b0 \cf0 key, value 
+\f0\b \cf2 in 
+\f1\b0 \cf0 parameters.items():\
+            st.write(
+\f0\b \cf4 f"**\cf2 \{
+\f1\b0 \cf0 key
+\f0\b \cf2 \}\cf4 **:"
+\f1\b0 \cf0 )\
+            st.json(value)\
+        st.write(
+\f0\b \cf4 "**Note: the decimals of the weights and biases can be slightly different than those in the "\
+                 "Frontiers article Figure 2b because of the rounding algorithm used by Python**"
+\f1\b0 \cf0 )\
+}

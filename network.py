@@ -5,8 +5,6 @@ from sklearn.metrics import confusion_matrix
 
 #  #  #  Tasks  #  #  #
 #  Split predict function into train and test functions
-
-
 # Error messages
 
 class CustomError(Exception):
@@ -99,17 +97,20 @@ class Network:
 
     # Generic function to get the structure of the network
     def get_structure(self):
+        layer_params = {}
         for layer in self.layers:
             if layer.layer_n == 0:
-                print("Input Layer")
-                layer.get_params(show=True)
-            elif(layer.layer_n == len(self.structure)-1):
-                print("Output Layer")
-                layer.get_params(show=True)
+                layer_name = "Input Layer"
+            elif layer.layer_n == len(self.structure) - 1:
+                layer_name = "Output Layer"
             else:
-                print(f"Layer", layer.layer_n)
-                layer.get_params(show=True)
-
+                layer_name = f"Layer {layer.layer_n + 1}"
+            params = layer.get_params(show=False)  # Assuming this returns a dictionary
+            layer_params[layer_name] = {
+                "weights": params.get("Weights"),
+                "biases": params.get("Biases")
+            }
+        return layer_params
     # Function to manually set the weights and biases of the network instead of random initialization
     def set_w_b(self, nweights, nbiases):
         """
@@ -338,6 +339,8 @@ class Layer:
             #predictions, activations = predictions.reshape(self.neuron_n,nobs), activations.reshape(self.neuron_n, nobs)
             predictions, activations = predictions.transpose(), activations.transpose()
         # Put everything in a dictionary
+        weights = np.round(weights, 2) if weights is not None else None
+        biases = np.round(biases, 2) if biases is not None else None
         params = {key: value for key, value in zip(keys, [predictions, activations, weights, biases])}
         if show is True:
             for key, value in params.items():
