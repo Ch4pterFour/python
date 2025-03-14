@@ -3,10 +3,8 @@ import helpers
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
-#  #  #  Tasks  #  #  #
-#  Split predict function into train and test functions
-# Error messages
 
+# Error messages
 class CustomError(Exception):
     def __init__(self, message="An error occurred"):
         self.message = message
@@ -111,6 +109,7 @@ class Network:
                 "biases": params.get("Biases")
             }
         return layer_params
+
     # Function to manually set the weights and biases of the network instead of random initialization
     def set_w_b(self, nweights, nbiases):
         """
@@ -191,15 +190,12 @@ class Network:
         for i, observation in enumerate(observations):
             #print(f"Observation {i}")
             self.iterator_state = i
-
             for l in range(len(self.layers) - 1, -1, -1):
                 layer = self.layers[l]
                 prev_layer = self.layers[l - 1] if l > 0 else None
-
                 if isinstance(layer, InputLayer):
                     #print("Input layer")
                     continue
-
                 self.out = isinstance(layer, OutputLayer)
                 #print("Output layer" if self.out else "Normal layer")
                 # For the last observation we want to get the max step size for that layer
@@ -349,7 +345,7 @@ class Layer:
             return params
 
     # Function to update the parameters in a layer format
-    # It is only used by the network to update the a values
+    # It is only used by the network to update the activation values
     # Otherwise this function is used when the user wants to set the weights/biases manually
     def set_params(self, weights=None, bias=None, a=None):
         for i, n in enumerate(self.neurons):
@@ -388,7 +384,7 @@ class Layer:
 
     # Function to calculate the derivatives using the chain rule
     def chain_rule(self, y_hat, y, previous):
-        # Previous is the previous layer object
+        # 'Previous' is the previous layer object
         obs = self.network_instance.iterator_state
         # Create arrays to store step sizes for the parameters
         step_sizes_w, \
@@ -444,7 +440,7 @@ class OutputLayer(Layer):
 
 class Neuron:
     def __init__(self, layer_instance, neuron_n, prev_n, input_l=False, output_l=False):
-        # a, z, a_d, b_d, w_d are None initially but are reshaped once the number of observations has been known
+        # a, z, a_d, b_d, w_d are None initially but are reshaped once the number of observations is known
         self.layer_instance = layer_instance  # Layer reference
         self.neuron_n = neuron_n  # Unique neuron number
         self.prev_n = prev_n  # Get the number of neurons in previous layer
@@ -489,7 +485,7 @@ class Neuron:
         self.a_d = np.zeros(size)
 
 
-    # Generic function to check the derivatives
+    # Generic function to check the values of derivatives
     def get_derivs(self):
         keys = ["a_d", "w_d", "b_d"]
         act_der = self.a_d

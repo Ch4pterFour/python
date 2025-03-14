@@ -5,10 +5,6 @@ import pandas as pd
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
-# To Do:
-# Add Git
-# Host on Streamlit
-
 # CSS for button styling
 st.markdown("""
     <style>
@@ -95,7 +91,7 @@ def run_network(seed, test_size):
         result = iris_network.predict((0, 1, 2, 3), 4, iris_train, iris_test, show=False)
         parameters = iris_network.get_structure()
 
-        return result, parameters  # Return values instead of modifying session state
+        return result, parameters
 
     except Exception as e:
         return f"ERROR: {e}", None
@@ -154,7 +150,7 @@ if st.session_state["network_done"]:
             st.write("The accuracy may be low due to suboptimal weights. "
                      "Try a different seed for better results.")
 
-        # change output format
+        # Change output format
         st.write("### Final Weights and Biases:")
         for layer, layer_data in parameters.items():
             st.write(f"#### {layer}")  # Display layer name (e.g., "Input layer")
@@ -170,7 +166,7 @@ if st.session_state["network_done"]:
                     if param_value.ndim == 1:
                         df = pd.DataFrame(param_value, columns=["Biases"])
 
-                    st.dataframe(df)  # Use st.table(df) for a static table
+                    st.dataframe(df)
                 else:
                     st.write(param_value)  # Fallback if not an array
         st.write("**Note:** the decimals of the weights and biases can be slightly different than those in the "
