@@ -281,11 +281,13 @@ class Network:
         y_pred = testing["Predictions"] if self.categorical is False else np.argmax(testing["Predictions"], axis=1)
         y_true = test[:, y]
         # Create confusion matrix
-        cm = confusion_matrix(y_true, y_pred)
-        unique_classes = np.unique(np.concatenate([y_true, y_pred]))
+        labels = [0, 1, 2]
+        cm = confusion_matrix(y_true, y_pred, labels=labels)
+
+        # Map numbers to names later
         names = ("Setosa", "Versicolor", "Virginica")
         cm = pd.DataFrame(cm, index=[f"True {i}" for i in names],
-                     columns = [f"Predicted {i}" for i in names])
+                          columns=[f"Predicted {i}" for i in names])
         accuracy = (1 - np.mean(y_true - y_pred) ) if self.categorical is False else (1 - np.mean(y_true != y_pred) )
         # Print the confusion matrix and accuracy
         results = {key: value for key, value in zip(keys, [y_pred, y_true, cm, accuracy])}

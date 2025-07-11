@@ -26,8 +26,7 @@ print("Confusion matrix")
 print(result["Confusion"])
 print("Accuracy")
 print(result["Accuracy"])
-for key, value in structure.items():
-    print(f"{key}, {value}")
+
 
 
 
